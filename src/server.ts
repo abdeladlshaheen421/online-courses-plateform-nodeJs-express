@@ -1,9 +1,10 @@
-import { adminRouter } from './routes/admin.router';
-import { userRouter } from './routes/user.router';
+import { adminRouter } from "./routes/admin.router";
+import { userRouter } from "./routes/user.router";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import morgan from "morgan";
 import dotenv from "dotenv";
+import db from "./models/index";
 dotenv.config();
 const app = express();
 
@@ -13,11 +14,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const { SERVER_PORT } = process.env;
-app.listen(SERVER_PORT || 8080, (): void => {
-  console.log(
-    `Server is running on port ${process.env.PORT} : http://localhost:${SERVER_PORT}`
-  );
-});
+db.sequelize.sync().then(() => {
+  app.listen(SERVER_PORT || 8080, (): void => {
+    console.log(
+      `Server is running on port ${process.env.PORT} : http://localhost:${SERVER_PORT}`
+    );
+  });
+}).catch((err:Error)=>{console.log(err)});
+
 // ===========Routes===========
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({ welocme: "welcome to Online Course platform" });

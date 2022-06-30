@@ -23,8 +23,7 @@
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "mysql2": "^2.3.3",
-    "sequelize": "^6.21.1",
-    "sequelize-cli": "^6.4.1"
+    "sequelize": "^6.21.2"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.0",
@@ -43,6 +42,7 @@
     "jasmine": "^4.2.1",
     "jasmine-spec-reporter": "^7.0.0",
     "nodemon": "^2.0.18",
+    "sequelize-cli": "^6.4.1",
     "supertest": "^6.2.3",
     "ts-node": "^10.8.1",
     "tsc-watch": "^5.0.3",
