@@ -1,10 +1,9 @@
 import {
   isValidCategoryId,
-  validateCreation,
-  validateUpdate,
+  validateData,
 } from "./../middlewares/category.middleware";
 import { Application, Request, Response, NextFunction } from "express";
-import { matchedData, validationResult } from "express-validator";
+import { matchedData } from "express-validator";
 import {
   show,
   index,
@@ -73,7 +72,7 @@ const updateHandler = async (
     await update(categoryId, updatedData);
     res.status(200).json({ success: "Category is updated Successfully" });
   } catch (err) {
-    next(err+' ');
+    next(err + " ");
   }
 };
 const destroyHandler = async (
@@ -93,13 +92,11 @@ const destroyHandler = async (
   }
 };
 export const categoryRouter = (app: Application): void => {
-  app
-    .route("/categories")
-    .get(indexHandler)
-    .post(validateCreation, createHandler);
+  app.route("/categories").get(indexHandler).post(validateData, createHandler);
   app
     .route("/categories/:categoryId")
-    .get(isValidCategoryId, showHandler)
-    .put(isValidCategoryId, validateUpdate, updateHandler)
-    .delete(isValidCategoryId, destroyHandler);
+    .all(isValidCategoryId)
+    .get(showHandler)
+    .put(validateData, updateHandler)
+    .delete(destroyHandler);
 };

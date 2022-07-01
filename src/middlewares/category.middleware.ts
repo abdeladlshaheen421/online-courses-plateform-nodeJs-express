@@ -12,19 +12,13 @@ export const isName = async (name: string) => {
   return category ? Promise.reject() : Promise.resolve();
 };
 
-export const validateCreation = [
+export const validateData = [
   body("name")
     .isAlpha("en-US", { ignore: " " })
     .withMessage("please enter a valid category name")
     .bail()
     .custom(isName)
     .withMessage("category name is already exist"),
-];
-
-export const validateUpdate = [
-  body("name")
-    .isAlpha("en-US", { ignore: " " })
-    .withMessage("please enter a valid category name"),
 ];
 
 export const isValidCategoryId = param("categoryId")
