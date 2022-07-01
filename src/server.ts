@@ -14,7 +14,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const { SERVER_PORT } = process.env;
-db.sequelize.sync().then(() => {
+db.sequelize.sync({force: true}).then(() => {
   app.listen(SERVER_PORT || 8080, (): void => {
     console.log(
       `Server is running on port ${process.env.PORT} : http://localhost:${SERVER_PORT}`
