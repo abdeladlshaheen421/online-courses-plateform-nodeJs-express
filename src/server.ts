@@ -5,6 +5,8 @@ import cors from "cors";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import db from "./models/index";
+import { categoryRouter } from "./routes/category.router";
+import { courseRouter } from "./routes/course.router";
 dotenv.config();
 const app = express();
 
@@ -14,13 +16,18 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const { SERVER_PORT } = process.env;
-db.sequelize.sync({force: true}).then(() => {
-  app.listen(SERVER_PORT || 8080, (): void => {
-    console.log(
-      `Server is running on port ${process.env.PORT} : http://localhost:${SERVER_PORT}`
-    );
+db.sequelize
+  .sync()
+  .then(() => {
+    app.listen(SERVER_PORT || 8080, (): void => {
+      console.log(
+        `Server is running on port ${process.env.PORT} : http://localhost:${SERVER_PORT}`
+      );
+    });
+  })
+  .catch((err: Error) => {
+    console.log(err);
   });
-}).catch((err:Error)=>{console.log(err)});
 
 // ===========Routes===========
 app.get("/", (req: Request, res: Response) => {
@@ -28,6 +35,8 @@ app.get("/", (req: Request, res: Response) => {
 });
 userRouter(app);
 adminRouter(app);
+categoryRouter(app);
+courseRouter(app);
 //=============================
 
 // Error handler middleware
