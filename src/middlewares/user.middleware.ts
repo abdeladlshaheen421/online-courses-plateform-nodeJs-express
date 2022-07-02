@@ -5,6 +5,22 @@ const isEmail = async (email: string) => {
   const user = await db.user.findOne({ where: { email } });
   return user ? Promise.reject() : Promise.resolve();
 };
+const isUser = async (email: string) => {
+  const user = await db.user.findOne({ where: { email } });
+  return user ? Promise.resolve() : Promise.reject();
+};
+
+export const isDefinedUser = [
+  body("email")
+    .isEmail()
+    .withMessage("please enter a valid email")
+    .bail()
+    .custom(isUser)
+    .withMessage("This credential Not Found"),
+  body("password")
+    .isStrongPassword()
+    .withMessage("please enter a valid password"),
+];
 
 export const validateRegister = [
   body("name")
