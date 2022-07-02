@@ -21,7 +21,7 @@ db.sequelize
   .then(() => {
     app.listen(SERVER_PORT || 8080, (): void => {
       console.log(
-        `Server is running on port ${process.env.PORT} : http://localhost:${SERVER_PORT}`
+        `Server is running on port ${SERVER_PORT} : http://localhost:${SERVER_PORT}`
       );
     });
   })
