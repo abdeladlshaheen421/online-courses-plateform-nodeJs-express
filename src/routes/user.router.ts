@@ -1,12 +1,35 @@
 import { Application, Request, Response, NextFunction } from "express";
-import { login, register, userType } from "../controllers/user.controller";
+import {
+  login,
+  register,
+  userType,
+  Role,
+  index,
+  blockUser,
+} from "../controllers/user.controller";
 import {
   validateRegister,
   isDefinedUser,
+  isUserId,
 } from "../middlewares/user.middleware";
 import { matchedData } from "express-validator";
-import jwt from "jsonwebtoken";
-import { validateMiddleware } from "../middlewares/general.middleware";
+import {
+  isAuthenticatedAdmin,
+  validateMiddleware,
+} from "../middlewares/general.middleware";
+
+const indexHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const users = await index();
+    res.status(200).json({ users });
+  } catch (err) {
+    next(err);
+  }
+};
 const registerHandler = async (
   req: Request,
   res: Response,
@@ -18,7 +41,7 @@ const registerHandler = async (
 
   try {
     const newUser: userType = <userType>matchedData(req);
-    await register(newUser);
+    await register(newUser, Role.user);
     res.status(201).json({ success: "user is Created Successfully" });
   } catch (err) {
     next(err);
@@ -43,7 +66,28 @@ const loginHandler = async (
   }
 };
 
+const blockUserHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void | Response> => {
+  const validateResult = validateMiddleware(req);
+  if (!validateResult.isEmpty())
+    return res.status(422).json({ errors: validateResult.array() });
+  try {
+    const userId: Number = req.body.userId;
+    await blockUser(userId);
+    res.status(200).json({ sucess: "User is Blocked Successfully" });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const userRouter = (app: Application) => {
+  app.route("/users").get(isAuthenticatedAdmin, indexHandler);
   app.route("/user/register").post(validateRegister, registerHandler);
   app.route("/user/login").post(isDefinedUser, loginHandler);
+  app
+    .route("/user/block")
+    .post(isAuthenticatedAdmin, isUserId, blockUserHandler);
 };

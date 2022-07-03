@@ -9,7 +9,7 @@ import {
 } from "../controllers/course.controller";
 import { matchedData } from "express-validator";
 import { isValidCourseId, validateData } from "../middlewares/course.middlware";
-import { validateMiddleware } from "../middlewares/general.middleware";
+import { validateMiddleware,isAuthenticatedAdmin } from "../middlewares/general.middleware";
 import { Request, Response, NextFunction } from "express";
 const indexHandler = async (
   req: Request,
@@ -91,11 +91,14 @@ const destroyHandler = async (
 };
 
 export const courseRouter = (app: Application): void => {
-  app.route("/courses").get(indexHandler).post(validateData, createHandler);
+  app
+    .route("/courses")
+    .get(indexHandler)
+    .post(isAuthenticatedAdmin,validateData, createHandler);
   app
     .route("/courses/:courseId")
     .all(isValidCourseId)
     .get(showHandler)
-    .put(validateData, updateHandler)
-    .delete(destroyHandler);
+    .put(isAuthenticatedAdmin,validateData, updateHandler)
+    .delete(isAuthenticatedAdmin,destroyHandler);
 };

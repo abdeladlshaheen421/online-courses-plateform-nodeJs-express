@@ -1,11 +1,12 @@
 import db from "../models";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { Op } from "sequelize";
 import dotenv from "dotenv";
 dotenv.config();
 const { PASSWORD_PEPPER, SALT_ROUNDS, JWT_SECRET } = process.env;
 
-enum Role {
+export enum Role {
   admin = "admin",
   user = "user",
 }
@@ -15,6 +16,7 @@ export type userType = {
   email: string;
   password: string;
   role?: Role;
+  bannedAt?: Date;
 };
 const encryptPassword = async (password: string): Promise<string> => {
   const hashedPassword: string = await bcrypt.hash(
@@ -24,10 +26,20 @@ const encryptPassword = async (password: string): Promise<string> => {
   return hashedPassword;
 };
 
-export const register = async (user: userType): Promise<void> => {
-  user.password = await encryptPassword(user.password);
-  user.role = Role.user;
+export const index = async (): Promise<userType[]> => {
   try {
+    const users: userType[] = await db.user.findAll({
+      where: { role: { [Op.eq]: "user" } },
+    });
+    return users;
+  } catch (err) {
+    throw Error(err as string);
+  }
+};
+export const register = async (user: userType, role: Role): Promise<void> => {
+  user.password = await encryptPassword(user.password);
+  try {
+    user.role = role;
     await db.user.create(user);
   } catch (error) {
     throw Error(error as string);
@@ -52,9 +64,20 @@ export const login = async (loginUser: userType): Promise<Object | boolean> => {
         JWT_SECRET as string,
         { expiresIn: "1d" }
       );
-      return {token,role:user.role}
+      return { token, role: user.role };
     }
     return false;
+  } catch (err) {
+    throw Error(err as string);
+  }
+};
+
+export const blockUser = async (id: Number) => {
+  try {
+    await db.user.update(
+      { bannedAt: new Date().toLocaleDateString() },
+      { where: { id } }
+    );
   } catch (err) {
     throw Error(err as string);
   }

@@ -12,7 +12,10 @@ import {
   update,
   destroy,
 } from "../controllers/category.controller";
-import { validateMiddleware } from "../middlewares/general.middleware";
+import {
+  validateMiddleware,
+  isAuthenticatedAdmin,
+} from "../middlewares/general.middleware";
 const indexHandler = async (
   req: Request,
   res: Response,
@@ -92,11 +95,14 @@ const destroyHandler = async (
   }
 };
 export const categoryRouter = (app: Application): void => {
-  app.route("/categories").get(indexHandler).post(validateData, createHandler);
+  app
+    .route("/categories")
+    .get(indexHandler)
+    .post(isAuthenticatedAdmin, validateData, createHandler);
   app
     .route("/categories/:categoryId")
     .all(isValidCategoryId)
     .get(showHandler)
-    .put(validateData, updateHandler)
-    .delete(destroyHandler);
+    .put(isAuthenticatedAdmin, validateData, updateHandler)
+    .delete(isAuthenticatedAdmin, destroyHandler);
 };
