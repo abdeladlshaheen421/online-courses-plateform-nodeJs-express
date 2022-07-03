@@ -6,11 +6,22 @@ import {
   destroy,
   create,
   courseType,
+  courseCategories,
+  addCategory,
+  removeCategory,
 } from "../controllers/course.controller";
 import { matchedData } from "express-validator";
-import { isValidCourseId, validateData } from "../middlewares/course.middlware";
-import { validateMiddleware,isAuthenticatedAdmin } from "../middlewares/general.middleware";
+import {
+  isValidCourseId,
+  validateData,
+  validateCourseCategory,
+} from "../middlewares/course.middlware";
+import {
+  validateMiddleware,
+  isAuthenticatedAdmin,
+} from "../middlewares/general.middleware";
 import { Request, Response, NextFunction } from "express";
+
 const indexHandler = async (
   req: Request,
   res: Response,
@@ -89,16 +100,88 @@ const destroyHandler = async (
     next(err);
   }
 };
+const getCategoriesHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const validateResult = validateMiddleware(req);
+  if (!validateResult.isEmpty())
+    return res.status(422).json({ errors: validateResult.array() });
 
+  try {
+    const courseId = Number(req.params.courseId);
+    const categories = await courseCategories(courseId);
+    res.status(200).json({ categories });
+  } catch (err) {
+    next(err as string);
+  }
+};
+const addCategoryHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const validateResult = validateMiddleware(req);
+  if (!validateResult.isEmpty())
+    return res.status(422).json({ errors: validateResult.array() });
+
+  try {
+    const courseId: Number = Number(req.body.courseId);
+    const categoryId: Number = Number(req.params.categoryId);
+    const result = await addCategory(courseId, categoryId);
+    if (result) {
+      res
+        .status(200)
+        .json({ succes: "category is added successfully to course" });
+    } else {
+      res
+        .status(200)
+        .json({ succes: "can't add same category twice to course" });
+    }
+  } catch (err) {
+    next(err);
+  }
+};
+const removeCategoryHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const validateResult = validateMiddleware(req);
+  if (!validateResult.isEmpty())
+    return res.status(422).json({ errors: validateResult.array() });
+
+  try {
+    const courseId: Number = req.body.courseId;
+    const categoryId: Number = Number(req.params.categoryId);
+    await removeCategory(courseId, categoryId);
+  } catch (err) {
+    next(err);
+  }
+};
 export const courseRouter = (app: Application): void => {
   app
     .route("/courses")
     .get(indexHandler)
-    .post(isAuthenticatedAdmin,validateData, createHandler);
+    .post(isAuthenticatedAdmin, validateData, createHandler);
+
   app
     .route("/courses/:courseId")
     .all(isValidCourseId)
     .get(showHandler)
-    .put(isAuthenticatedAdmin,validateData, updateHandler)
-    .delete(isAuthenticatedAdmin,destroyHandler);
+    .put(isAuthenticatedAdmin, validateData, updateHandler)
+    .delete(isAuthenticatedAdmin, destroyHandler);
+
+  app
+    .route("/course/categories/:courseId")
+    .get(isValidCourseId, getCategoriesHandler);
+
+  app
+    .route("/courses/category/create")
+    .post(isAuthenticatedAdmin, validateCourseCategory, addCategoryHandler);
+
+  app
+    .route("/courses/category/destroy")
+    .post(isAuthenticatedAdmin, validateCourseCategory, removeCategoryHandler);
 };
