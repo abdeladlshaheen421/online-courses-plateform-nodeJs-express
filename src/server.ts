@@ -17,7 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 
 const { SERVER_PORT } = process.env;
 db.sequelize
-  .sync({force: true})
+  .sync()
   .then(() => {
     app.listen(SERVER_PORT || 8080, (): void => {
       console.log(

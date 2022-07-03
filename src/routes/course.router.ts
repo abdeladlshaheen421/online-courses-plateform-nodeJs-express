@@ -127,17 +127,14 @@ const addCategoryHandler = async (
     return res.status(422).json({ errors: validateResult.array() });
 
   try {
-    const courseId: Number = Number(req.body.courseId);
-    const categoryId: Number = Number(req.params.categoryId);
-    const result = await addCategory(courseId, categoryId);
+    const data = matchedData(req);
+    const result = await addCategory(data.courseId, data.categoryId);
     if (result) {
       res
         .status(200)
         .json({ succes: "category is added successfully to course" });
     } else {
-      res
-        .status(200)
-        .json({ succes: "can't add same category twice to course" });
+      res.status(422).json({ fail: "can't add same category twice to course" });
     }
   } catch (err) {
     next(err);
@@ -153,9 +150,15 @@ const removeCategoryHandler = async (
     return res.status(422).json({ errors: validateResult.array() });
 
   try {
-    const courseId: Number = req.body.courseId;
-    const categoryId: Number = Number(req.params.categoryId);
-    await removeCategory(courseId, categoryId);
+    const data = matchedData(req);
+    const result = await removeCategory(data.courseId, data.categoryId);
+    if (result) {
+      res
+        .status(200)
+        .json({ succes: "category is deleted Successfully from course" });
+    } else {
+      res.status(422).json({ fail: "category is not defined in this course" });
+    }
   } catch (err) {
     next(err);
   }
@@ -178,10 +181,8 @@ export const courseRouter = (app: Application): void => {
     .get(isValidCourseId, getCategoriesHandler);
 
   app
-    .route("/courses/category/create")
-    .post(isAuthenticatedAdmin, validateCourseCategory, addCategoryHandler);
+    .route("/course/category")
+    .post(isAuthenticatedAdmin, validateCourseCategory, addCategoryHandler)
+    .delete(isAuthenticatedAdmin, validateCourseCategory, removeCategoryHandler);
 
-  app
-    .route("/courses/category/destroy")
-    .post(isAuthenticatedAdmin, validateCourseCategory, removeCategoryHandler);
 };

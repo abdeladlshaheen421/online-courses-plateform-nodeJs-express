@@ -89,11 +89,11 @@ export const addCategory = async (
         categoryId,
       },
     });
-    if(courseCategory)
-      return false;
+    if (courseCategory) return false;
     await db.courseCategory.create({ courseId, categoryId });
     return true;
   } catch (err) {
+    console.log(err);
     throw Error(err as string);
   }
 };
@@ -101,9 +101,17 @@ export const addCategory = async (
 export const removeCategory = async (
   courseId: Number,
   categoryId: Number
-): Promise<void> => {
+): Promise<boolean> => {
   try {
+    const courseCategory: courseCatType = await db.courseCategory.findOne({
+      where: {
+        courseId,
+        categoryId,
+      },
+    });
+    if (!courseCategory) return false;
     await db.courseCategory.destroy({ where: { courseId, categoryId } });
+    return true;
   } catch (err) {
     throw Error(err as string);
   }
