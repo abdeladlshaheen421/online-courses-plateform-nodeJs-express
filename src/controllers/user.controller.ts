@@ -82,3 +82,66 @@ export const blockUser = async (id: Number) => {
     throw Error(err as string);
   }
 };
+
+export const registerCourse = async (
+  userId: Number,
+  courseId: Number
+): Promise<boolean> => {
+  try {
+    const existRegistration = await db.usersCourse.findOne({
+      where: {
+        userId,
+        courseId,
+        progress: 0,
+      },
+    });
+    if (!existRegistration) {
+      await db.usersCourse.create({ userId, courseId });
+      return true;
+    }
+    return false;
+  } catch (err) {
+    throw Error(err as string);
+  }
+};
+
+export const cancelRegistration = async (
+  userId: Number,
+  courseId: Number
+): Promise<boolean> => {
+  try {
+    const existRegistration = await db.usersCourse.findOne({
+      where: {
+        userId,
+        courseId,
+      },
+    });
+    if (existRegistration && !existRegistration.finishesAt) {
+      await db.usersCourse.destroy({ where: { userId, courseId } });
+      return true;
+    }
+    return false;
+  } catch (err) {
+    throw Error(err as string);
+  }
+};
+
+export const finishCourse = async (
+  userId: Number,
+  courseId: Number
+): Promise<boolean> => {
+  const existRegistration = await db.usersCourse.findOne({
+    where: {
+      userId,
+      courseId,
+    },
+  });
+  if (existRegistration) {
+    await db.usersCourse.update(
+      { finishesAt: new Date().toLocaleDateString() },
+      { where: { userId, courseId } }
+    );
+    return true;
+  }
+  return false;
+};
