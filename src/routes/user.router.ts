@@ -6,6 +6,10 @@ import {
   Role,
   index,
   blockUser,
+  totalPoints,
+  finishCourse,
+  registerCourse,
+  cancelRegistration,
 } from "../controllers/user.controller";
 import {
   validateRegister,
@@ -16,8 +20,9 @@ import { matchedData } from "express-validator";
 import {
   isAuthenticatedAdmin,
   validateMiddleware,
-  isAuthenticatedUser
+  isAuthenticatedUser,
 } from "../middlewares/general.middleware";
+import { isCourseId } from "../middlewares/course.middlware";
 
 const indexHandler = async (
   req: Request,
@@ -84,27 +89,95 @@ const blockUserHandler = async (
   }
 };
 
-const registerCourseHandler = (
+const registerCourseHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {};
-const cancelCourseRegistrationHandler = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {};
+): Promise<void | Response> => {
+  const validateResult = validateMiddleware(req);
+  if (!validateResult.isEmpty())
+    return res.status(422).json({ errors: validateResult.array() });
+  try {
+    const authHeader: string = <string>req.headers.authorization;
+    const courseId: Number = <Number>req.body.courseId;
+    const result = await registerCourse(authHeader, courseId);
+    return result
+      ? res
+          .status(200)
+          .json({ success: "you are register to course successfully" })
+      : res
+          .status(422)
+          .json({ fail: "Sorry, you are register to this course before" });
+  } catch (err) {
+    next(err);
+  }
+};
 
-const finishCourseHandler = (
+const cancelCourseRegistrationHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {};
-const getTotalPointsHandler = (
+): Promise<void | Response> => {
+  const validateResult = validateMiddleware(req);
+  if (!validateResult.isEmpty())
+    return res.status(422).json({ errors: validateResult.array() });
+  try {
+    const authHeader: string = <string>req.headers.authorization;
+    const courseId: Number = <Number>req.body.courseId;
+    const result = await cancelRegistration(authHeader, courseId);
+    return result
+      ? res
+          .status(200)
+          .json({ success: "you are Cancel course Registration successfully" })
+      : res.status(422).json({
+          fail: "Sorry, you are Can't cancel this course registration",
+        });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const finishCourseHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {};
+) => {
+  const validateResult = validateMiddleware(req);
+  if (!validateResult.isEmpty())
+    return res.status(422).json({ errors: validateResult.array() });
+  try {
+    const authHeader: string = <string>req.headers.authorization;
+    const courseId: Number = <Number>req.body.courseId;
+    const result = await finishCourse(authHeader, courseId);
+    return result
+      ? res
+          .status(200)
+          .json({
+            success: "Congratulation you are finished Course Successfully",
+          })
+      : res.status(422).json({
+          fail: "Sorry, This course is not registered before",
+        });
+  } catch (err) {
+    next(err);
+  }
+};
+const getTotalPointsHandler = async(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const validateResult = validateMiddleware(req);
+  if (!validateResult.isEmpty())
+    return res.status(422).json({ errors: validateResult.array() });
+  try {
+    const authHeader: string = <string>req.headers.authorization;
+    const points = await totalPoints(authHeader);
+    res.status(200).json({ points})
+  } catch (err) {
+    next(err);
+  }
+};
 export const userRouter = (app: Application) => {
   app.route("/users").get(isAuthenticatedAdmin, indexHandler);
 
@@ -116,11 +189,23 @@ export const userRouter = (app: Application) => {
     .route("/user/block")
     .post(isAuthenticatedAdmin, isUserId, blockUserHandler);
 
-  app.route("/user/totalpoints").get(isAuthenticatedUser,getTotalPointsHandler);
+  app
+    .route("/user/totalpoints")
+    .get(isAuthenticatedUser, getTotalPointsHandler);
 
-  app.route("/user/register-course").post(isAuthenticatedUser,registerCourseHandler);
+  app
+    .route("/user/register-course")
+    .post(isAuthenticatedUser, isCourseId, registerCourseHandler);
 
-  app.route("/user/cancel-course").delete(isAuthenticatedUser,cancelCourseRegistrationHandler);
+  app
+    .route("/user/cancel-course")
+    .delete(
+      isAuthenticatedUser,
+      isCourseId,
+      cancelCourseRegistrationHandler
+    );
 
-  app.route("/user/finish-course").put(isAuthenticatedUser,finishCourseHandler);
+  app
+    .route("/user/finish-course")
+    .put(isAuthenticatedUser, isCourseId, finishCourseHandler);
 };

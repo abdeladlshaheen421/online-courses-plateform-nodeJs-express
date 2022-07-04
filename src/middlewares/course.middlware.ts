@@ -24,11 +24,14 @@ const isCategory = async (categoryId: Number) => {
   return category ? Promise.resolve() : Promise.reject();
 };
 
-// validate is that the course exist or not
+// validate is that the course exist or not to validate param
 export const isValidCourseId = param("courseId")
   .custom(isCourse)
   .withMessage("Sorry Can't find This Course");
 
+export const isCourseId =body("courseId")
+.custom(isCourse)
+.withMessage("Sorry Can't find This Course");
 // validate add or remove category to course middleware
 export const validateCourseCategory = [
   body("courseId")

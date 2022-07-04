@@ -91,15 +91,15 @@ export type userCoursesType = {
   finishesAt: Date;
 };
 export const registerCourse = async (
-  userId: Number,
+  authHeader: string,
   courseId: Number
 ): Promise<boolean> => {
   try {
+    const userId = getAuthenticatedUserId(authHeader);
     const existRegistration: userCoursesType = await db.usersCourse.findOne({
       where: {
         userId,
         courseId,
-        progress: 0,
       },
     });
     if (!existRegistration) {
@@ -113,10 +113,11 @@ export const registerCourse = async (
 };
 
 export const cancelRegistration = async (
-  userId: Number,
+  authHeader: string,
   courseId: Number
 ): Promise<boolean> => {
   try {
+    const userId = getAuthenticatedUserId(authHeader);
     const existRegistration: userCoursesType = await db.usersCourse.findOne({
       where: {
         userId,
@@ -134,10 +135,11 @@ export const cancelRegistration = async (
 };
 
 export const finishCourse = async (
-  userId: Number,
+  authHeader: string,
   courseId: Number
 ): Promise<boolean> => {
   try {
+    const userId = getAuthenticatedUserId(authHeader);
     const existRegistration: userCoursesType = await db.usersCourse.findOne({
       where: {
         userId,
@@ -157,19 +159,30 @@ export const finishCourse = async (
   }
 };
 
-export const totalPoints = async (userId: Number): Promise<Number> => {
+export const totalPoints = async (authHeader: string): Promise<Number> => {
   try {
+    const userId = getAuthenticatedUserId(authHeader);
     const courses: userCoursesType[] = await db.usersCourse.findAll({
       where: { userId, finishesAt: { [Op.ne]: null } },
     });
     const coursesIds: Number[] = courses.map(
       (userCourse) => userCourse.courseId
     );
-    const totalPoints: Number = await db.course.count({
+    const totalPoints: Number = await db.course.sum('points',{
       where: { id: { [Op.in]: coursesIds } },
     });
     return totalPoints;
   } catch (err) {
     throw Error(err as string);
+  }
+};
+
+const getAuthenticatedUserId = (authHeader: string): Number => {
+  try {
+    const token: string = authHeader.split(" ")[1];
+    const adminData: userType = <userType>jwt.verify(token, <string>JWT_SECRET);
+    return adminData.id as Number;
+  } catch (error) {
+    throw Error(error as string);
   }
 };

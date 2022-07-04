@@ -32,7 +32,7 @@ export const isAuthenticatedAdmin = async (
     const token: string = authHeader.split(" ")[1];
     const adminData: userType = <userType>jwt.verify(token, <string>JWT_SECRET);
     const user: userType = await db.user.findByPk(adminData.id);
-    if ((user.role = Role.admin)) {
+    if ((user.role == Role.admin)) {
       next();
       return;
     } else {
@@ -55,7 +55,7 @@ export const isAuthenticatedUser = async (
     const token: string = authHeader.split(" ")[1];
     const adminData: userType = <userType>jwt.verify(token, <string>JWT_SECRET);
     const user: userType = await db.user.findByPk(adminData.id);
-    if ((user.role = Role.user)) {
+    if ((user.role == Role.user)) {
       next();
       return;
     } else {
