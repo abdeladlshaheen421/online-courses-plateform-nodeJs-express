@@ -83,12 +83,19 @@ export const blockUser = async (id: Number) => {
   }
 };
 
+export type userCoursesType = {
+  id?: Number;
+  userId: Number;
+  courseId: Number;
+  progress?: Number;
+  finishesAt: Date;
+};
 export const registerCourse = async (
   userId: Number,
   courseId: Number
 ): Promise<boolean> => {
   try {
-    const existRegistration = await db.usersCourse.findOne({
+    const existRegistration: userCoursesType = await db.usersCourse.findOne({
       where: {
         userId,
         courseId,
@@ -110,7 +117,7 @@ export const cancelRegistration = async (
   courseId: Number
 ): Promise<boolean> => {
   try {
-    const existRegistration = await db.usersCourse.findOne({
+    const existRegistration: userCoursesType = await db.usersCourse.findOne({
       where: {
         userId,
         courseId,
@@ -130,18 +137,39 @@ export const finishCourse = async (
   userId: Number,
   courseId: Number
 ): Promise<boolean> => {
-  const existRegistration = await db.usersCourse.findOne({
-    where: {
-      userId,
-      courseId,
-    },
-  });
-  if (existRegistration) {
-    await db.usersCourse.update(
-      { finishesAt: new Date().toLocaleDateString() },
-      { where: { userId, courseId } }
-    );
-    return true;
+  try {
+    const existRegistration: userCoursesType = await db.usersCourse.findOne({
+      where: {
+        userId,
+        courseId,
+      },
+    });
+    if (existRegistration) {
+      await db.usersCourse.update(
+        { finishesAt: new Date().toLocaleDateString() },
+        { where: { userId, courseId } }
+      );
+      return true;
+    }
+    return false;
+  } catch (err) {
+    throw Error(err as string);
   }
-  return false;
+};
+
+export const totalPoints = async (userId: Number): Promise<Number> => {
+  try {
+    const courses: userCoursesType[] = await db.usersCourse.findAll({
+      where: { userId, finishesAt: { [Op.ne]: null } },
+    });
+    const coursesIds: Number[] = courses.map(
+      (userCourse) => userCourse.courseId
+    );
+    const totalPoints: Number = await db.course.count({
+      where: { id: { [Op.in]: coursesIds } },
+    });
+    return totalPoints;
+  } catch (err) {
+    throw Error(err as string);
+  }
 };
