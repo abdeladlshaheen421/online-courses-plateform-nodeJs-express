@@ -16,6 +16,7 @@ import { matchedData } from "express-validator";
 import {
   isAuthenticatedAdmin,
   validateMiddleware,
+  isAuthenticatedUser
 } from "../middlewares/general.middleware";
 
 const indexHandler = async (
@@ -83,11 +84,43 @@ const blockUserHandler = async (
   }
 };
 
+const registerCourseHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {};
+const cancelCourseRegistrationHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {};
+
+const finishCourseHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {};
+const getTotalPointsHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {};
 export const userRouter = (app: Application) => {
   app.route("/users").get(isAuthenticatedAdmin, indexHandler);
+
   app.route("/user/register").post(validateRegister, registerHandler);
+
   app.route("/user/login").post(isDefinedUser, loginHandler);
+
   app
     .route("/user/block")
     .post(isAuthenticatedAdmin, isUserId, blockUserHandler);
+
+  app.route("/user/totalpoints").get(isAuthenticatedUser,getTotalPointsHandler);
+
+  app.route("/user/register-course").post(isAuthenticatedUser,registerCourseHandler);
+
+  app.route("/user/cancel-course").delete(isAuthenticatedUser,cancelCourseRegistrationHandler);
+
+  app.route("/user/finish-course").put(isAuthenticatedUser,finishCourseHandler);
 };
